@@ -9,12 +9,14 @@ import { UserModel } from '../db/models/users.model';
  * @returns {Promise<User>}
  */
 const createUser = async (data: any) => {
-	const userExists = await UserModel.query()
-		.findOne({ email: data.email })
-		.catch((error) => {
-			logger.error(error);
-		});
-	if (userExists) {
+	if (await getUserByPhone(data.phone)) {
+		throw new ApiError(
+			httpStatus.BAD_REQUEST,
+			'Phone number already taken'
+		);
+	}
+
+	if (await getUserByEmail(data.email)) {
 		throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
 	}
 
@@ -52,20 +54,34 @@ const getUserById = async (userId: number) => {
 /**
  * Get user by email
  * @param {string} email
- * @returns {Promise<User>}
+ * @returns {Promise<UserModel>}
  */
 const getUserByEmail = async (email: string) => {
-	const user = await UserModel.query()
-		.findOne({ email: email })
-		.catch((error) => {
-			logger.error(error);
-		});
-	return user;
+	try {
+		const user = await UserModel.query().where({ email: email }).first();
+		return user;
+	} catch (error) {
+		logger.error(error);
+	}
+};
+
+/**
+ *
+ * @param phone
+ * @returns {Promise<UserModel>}
+ */
+const getUserByPhone = async (phone: number) => {
+	try {
+		const user = await UserModel.query().where({ phone: phone }).first();
+		return user;
+	} catch (error) {
+		logger.error(error);
+	}
 };
 
 /**
  * Get all users
- * @returns {Promise<User[]>, number}
+ * @returns {Promise<UserModel[]>, number}
  */
 const getUsers = async () => {
 	const users = await UserModel.query()
@@ -104,28 +120,6 @@ const updateUserById = async (userId: number, updateBody: any) => {
 };
 
 /**
- *
- * @param userId
- * @param password
- * @returns {Promise<User>}
- */
-const updatePasswordById = async (userId: number, password: string) => {
-	const user = await getUserById(userId);
-	if (!user) {
-		throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
-	}
-
-	Object.assign(user, password);
-	await user
-		.$query()
-		.patchAndFetch({ password: password })
-		.catch((error) => {
-			logger.error(error);
-		});
-	return user;
-};
-
-/**
  * Delete user by id
  * @param userId
  * @returns {Promise<User>}
@@ -150,6 +144,5 @@ export {
 	getUserByEmail as getUserByEmailService,
 	getUsers as getUsersService,
 	updateUserById as updateUserByIdService,
-	updatePasswordById as updatePasswordByIdService,
 	deleteUserById as deleteUserByIdService,
 };

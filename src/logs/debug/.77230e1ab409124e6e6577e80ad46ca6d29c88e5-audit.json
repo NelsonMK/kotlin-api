@@ -1,0 +1,14 @@
+{
+    "keep": {
+        "days": false,
+        "amount": 30
+    },
+    "auditLog": "F:\\Programming\\node\\kotlin-api\\src\\logs\\debug\\.77230e1ab409124e6e6577e80ad46ca6d29c88e5-audit.json",
+    "files": [
+        {
+            "date": 1634571111535,
+            "name": "F:\\Programming\\node\\kotlin-api\\src\\logs\\debug\\2021-10-18.log",
+            "hash": "9d18ac9039b26fc94ef7b88fb909aacb"
+        }
+    ]
+}

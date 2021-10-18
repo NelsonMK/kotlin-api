@@ -3,16 +3,10 @@ import {
 	PrimaryGeneratedColumn,
 	Column,
 	BaseEntity,
-	CreateDateColumn,
-	UpdateDateColumn,
-	BeforeInsert,
-	BeforeUpdate,
 	OneToMany,
 } from 'typeorm';
-import { Exclude, Expose } from 'class-transformer';
-import * as bcrypt from 'bcryptjs';
-import logger from '../utils/logger';
-import { Token } from './Token';
+import { Tokens } from './Token';
+import { roles } from '../config/roles';
 
 @Entity('users')
 export class User extends BaseEntity {
@@ -31,39 +25,18 @@ export class User extends BaseEntity {
 	@Column({ type: 'varchar', width: 250, unique: true })
 	email!: string;
 
-	@Exclude({ toPlainOnly: true })
 	@Column({ select: false })
 	password!: string;
 
-	@OneToMany(() => Token, (token) => token.user)
-	tokens!: Token[];
+	@OneToMany(() => Tokens, (token) => token.user)
+	tokens!: Tokens[];
 
-	@Column({ type: 'timestamptz' })
-	@CreateDateColumn()
+	@Column({ type: 'enum', enum: roles, nullable: true })
+	role!: string;
+
+	@Column({ type: 'timestamptz', nullable: true })
 	created_at!: Date;
 
-	@Column({ type: 'timestamptz' })
-	@UpdateDateColumn()
+	@Column({ type: 'timestamptz', nullable: true })
 	updated_at!: Date;
-
-	@BeforeInsert()
-	@BeforeUpdate()
-	async hashPassword(password: string) {
-		if (this.password) {
-			try {
-				const salt = await bcrypt.genSalt();
-				this.password = await bcrypt.hash(
-					password || this.password,
-					salt
-				);
-			} catch (error) {
-				logger.error(error);
-			}
-		}
-	}
-
-	@Expose({ name: 'fullName' })
-	getFullName() {
-		return this.first_name + ' ' + this.last_name;
-	}
 }

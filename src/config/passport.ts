@@ -1,6 +1,9 @@
+import httpStatus from 'http-status';
 import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
 import { ObjectID } from 'typeorm';
-import { User } from '../entity/User';
+import { AdminModel } from '../db/models/admin.model';
+import { UserModel } from '../db/models/users.model';
+import ApiError from '../utils/ApiError';
 import logger from '../utils/logger';
 import config from './config';
 import tokenTypes from './tokens';
@@ -15,13 +18,19 @@ const jwtVerify = async (
 		type: string;
 		sub: string | number | Date | ObjectID | undefined;
 	},
-	done: (arg0: unknown, arg1: boolean | User) => void
+	done: (
+		arg0: unknown,
+		arg1: boolean | UserModel | AdminModel,
+		arg3?: any
+	) => void
 ) => {
 	try {
 		if (payload.type !== tokenTypes.ACCESS) {
-			throw new Error('Invalid token type');
+			throw new ApiError(httpStatus.UNAUTHORIZED, 'Invalid token type');
 		}
-		const user = await User.findOne(payload.sub)
+
+		const user = await UserModel.query()
+			.findById(Number(payload.sub))
 			.then((user) => {
 				return user;
 			})
@@ -29,12 +38,13 @@ const jwtVerify = async (
 				logger.error(error);
 				done(error, false);
 			});
+
 		if (!user) {
 			return done(null, false);
 		}
 		done(null, user);
 	} catch (error) {
-		done(error, false);
+		done(error, false, { message: 'Server error' });
 	}
 };
 

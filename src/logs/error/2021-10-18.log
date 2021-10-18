@@ -1,0 +1,25 @@
+2021-10-18 06:40:08 [31merror[39m: uncaughtException: logger_1.default.info is not a function
+TypeError: logger_1.default.info is not a function
+    at Server.<anonymous> (F:\Programming\node\kotlin-api\src\index.ts:67:10)
+    at Object.onceWrapper (events.js:519:28)
+    at Server.emit (events.js:400:28)
+    at Server.emit (domain.js:470:12)
+    at Server.wrappedEmit [as emit] (F:\Programming\node\kotlin-api\node_modules\newrelic\lib\instrumentation\core\http.js:455:21)
+    at emitListeningNT (net.js:1354:10)
+    at processTicksAndRejections (internal/process/task_queues.js:81:21)
+2021-10-18 06:47:02 [31merror[39m: uncaughtException: ⨯ Unable to compile TypeScript
+src\config\passport.ts (29,16): Property 'type' does not exist on type 'never'. (2339)
+src\config\passport.ts (37,30): Property 'sub' does not exist on type 'never'. (2339)
+TSError: ⨯ Unable to compile TypeScript
+src\config\passport.ts (29,16): Property 'type' does not exist on type 'never'. (2339)
+src\config\passport.ts (37,30): Property 'sub' does not exist on type 'never'. (2339)
+    at getOutput (F:\Programming\node\kotlin-api\node_modules\ts-node\src\index.ts:307:15)
+    at F:\Programming\node\kotlin-api\node_modules\ts-node\src\index.ts:336:16
+    at Object.compile (F:\Programming\node\kotlin-api\node_modules\ts-node\src\index.ts:498:11)
+    at Module.m._compile (F:\Programming\node\kotlin-api\node_modules\ts-node\src\index.ts:392:43)
+    at Module._extensions..js (internal/modules/cjs/loader.js:1101:10)
+    at Object.require.extensions.<computed> [as .ts] (F:\Programming\node\kotlin-api\node_modules\ts-node\src\index.ts:395:12)
+    at Module.load (internal/modules/cjs/loader.js:937:32)
+    at Function.Module._load (internal/modules/cjs/loader.js:778:12)
+    at Function.wrappedLoad [as _load] (F:\Programming\node\kotlin-api\node_modules\newrelic\lib\shimmer.js:297:24)
+    at Module.require (internal/modules/cjs/loader.js:961:19)

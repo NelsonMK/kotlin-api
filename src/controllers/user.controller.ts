@@ -1,11 +1,11 @@
 import { Request, Response } from 'express';
 import * as httpStatus from 'http-status';
-import userService from '../services';
+import { getUsersService } from '../services/user.service';
 import catchAsync from '../utils/CatchAsync';
 
-const createUser = catchAsync(async (req: Request, res: Response) => {
-	const user = await userService.createUser(req.body);
-	res.status(httpStatus.CREATED).send(user);
+const getUsers = catchAsync(async (req: Request, res: Response) => {
+	const users = await getUsersService();
+	res.send(users);
 });
 
-export { createUser };
+export { getUsers };

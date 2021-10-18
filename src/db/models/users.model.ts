@@ -1,26 +1,35 @@
-import { mixin, Model } from 'objection';
+import { Model } from 'objection';
 import * as bcrypt from 'bcryptjs';
-import moment from 'moment-timezone';
-import path from 'path';
-import * as visibilityPlugin from 'objection-visibility';
 import { format } from 'timeago.js';
-
-export class UserModel extends mixin(Model, visibilityPlugin.default) {
-	id!: number;
+import BaseModel from './base.model';
+import moment from 'moment-timezone';
+export class UserModel extends BaseModel {
 	first_name!: string;
 	last_name!: string;
 	phone!: string;
 	email!: string;
 	password!: string;
-	created_at!: any;
-	updated_at!: any;
 
 	static get tableName() {
 		return 'users';
 	}
 
 	static get hidden() {
-		return ['password'];
+		return ['password', 'id'];
+	}
+
+	static get visible() {
+		return [
+			'first_name',
+			'last_name',
+			'phone',
+			'email',
+			'created_at',
+			'updated_at',
+			'fullName',
+			'joined',
+			'tokens',
+		];
 	}
 
 	static get virtualAttributes() {
@@ -36,14 +45,13 @@ export class UserModel extends mixin(Model, visibilityPlugin.default) {
 	}
 
 	static get relationMappings() {
-		const tokens = path.resolve('src', 'db', 'models', 'tokens.model.ts');
 		return {
 			tokens: {
 				relation: Model.HasManyRelation,
-				modelClass: tokens,
+				modelClass: 'tokens.model',
 				join: {
 					from: 'users.id',
-					to: 'token.userId',
+					to: 'tokens.user_id',
 				},
 			},
 		};
@@ -59,7 +67,26 @@ export class UserModel extends mixin(Model, visibilityPlugin.default) {
 		const salt = await bcrypt.genSalt(12);
 		if (this.password) {
 			this.password = await bcrypt.hash(this.password, salt);
-			this.updated_at = moment(new Date()).tz('Africa/Nairobi');
 		}
+		this.updated_at = moment(new Date()).tz('Africa/Nairobi');
+	}
+
+	async isPhoneTaken(phoneNumber: string, excludeUserId: number) {
+		const user = await this.$query()
+			.findOne({ phone: phoneNumber })
+			.whereNot('id', excludeUserId);
+		return !!user;
+	}
+
+	async isEmailTaken(email: string, excludeUserId?: number) {
+		const user = await this.$query()
+			.findOne({ email: email })
+			.whereNot({ id: excludeUserId });
+		return !!user;
+	}
+
+	async isPasswordMatch(password: string) {
+		const user = this;
+		return await bcrypt.compare(password, user.password);
 	}
 }

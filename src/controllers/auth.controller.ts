@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import httpStatus from 'http-status';
-import * as _ from 'lodash';
 import {
 	loginService,
+	refreshAccessTokenService,
 	refreshAuthService,
 	resetPasswordService,
 } from '../services/auth.service';
@@ -15,9 +15,8 @@ import catchAsync from '../utils/CatchAsync';
 
 const register = catchAsync(async (req: Request, res: Response) => {
 	const user = await createUserService(req.body);
-	const tokens = await generateAuthTokens(user);
 
-	res.status(httpStatus.CREATED).send({ user, tokens });
+	res.status(httpStatus.CREATED).send(user);
 });
 
 const login = catchAsync(async (req: Request, res: Response) => {
@@ -30,6 +29,11 @@ const login = catchAsync(async (req: Request, res: Response) => {
 const refreshTokens = catchAsync(async (req: Request, res: Response) => {
 	const tokens = await refreshAuthService(req.body.refreshToken);
 	res.send({ ...tokens });
+});
+
+const refreshAccessToken = catchAsync(async (req: Request, res: Response) => {
+	const token = await refreshAccessTokenService(req.body.refreshToken);
+	res.send({ ...token });
 });
 
 const forgotPassword = catchAsync(async (req: Request, res: Response) => {
@@ -55,6 +59,7 @@ export {
 	register as registerUser,
 	login as loginUser,
 	refreshTokens,
+	refreshAccessToken,
 	forgotPassword,
 	resetPassword,
 	users as getUsers,

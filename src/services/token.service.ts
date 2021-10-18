@@ -1,6 +1,6 @@
 import httpStatus from 'http-status';
 import * as jwt from 'jsonwebtoken';
-import moment from 'moment';
+import moment from 'moment-timezone';
 import config from '../config/config';
 import tokenTypes from '../config/tokens';
 import { TokenModel } from '../db/models/tokens.model';
@@ -22,6 +22,7 @@ const generateToken = (
 	secret = config.jwt.secret
 ) => {
 	const payload = {
+		//*Add type of user to distinguish between admin, client and rider
 		sub: userId,
 		iat: moment().unix(),
 		exp: expires.unix(),
@@ -52,7 +53,7 @@ const saveToken = async (
 		expires,
 		type,
 		blacklisted,
-		userId,
+		user_id: userId,
 	});
 };
 
@@ -67,13 +68,17 @@ const verifyToken = async (token: string, type: string) => {
 	const payload = jwt.verify(token, config.jwt.secret);
 
 	const savedToken = await TokenModel.query()
-		.findOne({ token, type, userId: payload.sub, blacklisted: false })
+		.findOne({ token, type, user_id: payload.sub, blacklisted: false })
+		//.allowGraph('user')
+		.withGraphFetched('user')
 		.catch((error) => {
 			logger.error(error);
 		});
 
+	console.log(savedToken);
+
 	if (!savedToken) {
-		throw new ApiError(httpStatus.UNAUTHORIZED, 'Request another token');
+		throw new ApiError(httpStatus.UNAUTHORIZED, 'Invalid token');
 	}
 	return savedToken;
 };
@@ -84,14 +89,14 @@ const verifyToken = async (token: string, type: string) => {
  * @returns {object}
  */
 const generateAuthTokens = async (user: UserModel) => {
-	const accessTokenExpires = moment().add(30, 'minutes');
+	const accessTokenExpires = moment().add(30, 'minutes').tz('Africa/Nairobi');
 	const accessToken = generateToken(
 		user.id,
 		accessTokenExpires,
 		tokenTypes.ACCESS
 	);
 
-	const refreshTokenExpires = moment().add(10, 'days');
+	const refreshTokenExpires = moment().add(30, 'days').tz('Africa/Nairobi');
 	const refreshToken = generateToken(
 		user.id,
 		refreshTokenExpires,
@@ -117,6 +122,27 @@ const generateAuthTokens = async (user: UserModel) => {
 };
 
 /**
+ * Generate a new access token
+ * @param user
+ * @returns {Object}
+ */
+const generateAccessToken = async (user: UserModel) => {
+	const accessTokenExpires = moment().add(30, 'minutes').tz('Africa/Nairobi');
+	const accessToken = generateToken(
+		user.id,
+		accessTokenExpires,
+		tokenTypes.ACCESS
+	);
+
+	return {
+		access: {
+			token: accessToken,
+			expires: accessTokenExpires.toDate(),
+		},
+	};
+};
+
+/**
  * Generate reset password token
  * @param email
  * @returns {string}
@@ -135,7 +161,7 @@ const generateResetPasswordToken = async (email: string) => {
 		);
 	}
 
-	const expires = moment().add(10, 'minutes');
+	const expires = moment().add(10, 'minutes').tz('Africa/Nairobi');
 	const resetPasswordToken = generateToken(
 		user.id,
 		expires,
@@ -149,4 +175,9 @@ const generateResetPasswordToken = async (email: string) => {
 	);
 	return resetPasswordToken;
 };
-export { verifyToken, generateAuthTokens, generateResetPasswordToken };
+export {
+	verifyToken,
+	generateAuthTokens,
+	generateAccessToken,
+	generateResetPasswordToken,
+};

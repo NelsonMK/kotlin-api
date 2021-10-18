@@ -3,8 +3,11 @@ import { development } from './knexfile';
 import { Model } from 'objection';
 import logger from '../utils/logger';
 import config from '../config/config';
+import { createConnection } from 'typeorm';
+import { User } from '../entity/User';
+import { Tokens } from '../entity/Token';
 
-const connectDB = () => {
+const connectDB = async () => {
 	try {
 		let db = null;
 
@@ -13,6 +16,18 @@ const connectDB = () => {
 		}
 
 		Model.knex(db);
+
+		await createConnection({
+			type: 'postgres',
+			url: config.pg,
+			entities: [User, Tokens],
+			synchronize: true,
+			logging: false,
+		})
+			.then(() => {})
+			.catch((error) => {
+				logger.error(error);
+			});
 	} catch (error) {
 		logger.error(`Unable to connect to db due to ${error}`);
 	}

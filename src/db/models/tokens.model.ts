@@ -1,40 +1,29 @@
-import moment from 'moment-timezone';
 import { Model } from 'objection';
-import path from 'path';
+import BaseModel from './base.model';
+import { UserModel } from './users.model';
 
-export class TokenModel extends Model {
-	id!: number;
+export class TokenModel extends BaseModel {
 	token!: string;
 	type!: string;
 	expires!: Date;
 	blacklisted!: Boolean;
-	userId!: number;
-	created_at!: any;
-	updated_at!: any;
+	user_id!: number;
+	user!: UserModel;
 
 	static get tableName() {
-		return 'token';
+		return 'tokens';
 	}
 
-	/*static get relationMappings() {
-		const user = path.resolve('src', 'db', 'models', 'tokens.model.ts');
+	static get relationMappings() {
 		return {
 			user: {
 				relation: Model.BelongsToOneRelation,
-				modelClass: user,
+				modelClass: 'users.model',
 				join: {
-					from: 'token.userId',
+					from: 'tokens.user_id',
 					to: 'users.id',
 				},
 			},
 		};
-	}*/
-
-	async $beforeInsert() {
-		this.created_at = moment(new Date()).tz('Africa/Nairobi');
-	}
-
-	async $beforeUpdate() {
-		this.updated_at = moment(new Date()).tz('Africa/Nairobi');
 	}
 }
