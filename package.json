@@ -2,7 +2,7 @@
 	"name": "kotlin-api",
 	"version": "1.0.0",
 	"description": "",
-	"main": "index.js",
+	"main": "build/index.js",
 	"private": true,
 	"scripts": {
 		"start": "npm run build && cross-env NODE_ENV=production node build/server.js",
@@ -20,15 +20,14 @@
 		"@types/lodash": "^4.14.175",
 		"@types/morgan": "^1.9.3",
 		"@types/newrelic": "^7.0.2",
-		"@types/node": "^8.0.29",
+		"@types/node": "^7.0.7",
+		"@types/passport-jwt": "^3.0.6",
 		"nodemon": "^2.0.13",
 		"ts-node": "3.3.0",
-		"typescript": "3.3.3333"
+		"typescript": "4.2.4"
 	},
 	"dependencies": {
-		"@types/passport-jwt": "^3.0.6",
 		"bcryptjs": "^2.4.3",
-		"class-transformer": "^0.4.0",
 		"compression": "^1.7.4",
 		"cors": "^2.8.5",
 		"cross-env": "^7.0.3",
@@ -56,8 +55,6 @@
 		"typeorm": "0.2.37",
 		"winston": "^3.3.3",
 		"winston-daily-rotate-file": "^4.5.5",
-		"xss-clean": "^0.1.1",
-		"xss-filters": "^1.2.7",
-		"zod": "^3.10.0"
+		"xss-filters": "^1.2.7"
 	}
 }
