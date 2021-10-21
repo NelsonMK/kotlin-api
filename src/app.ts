@@ -47,18 +47,10 @@ class App {
 	}
 
 	private initializeMiddlewares() {
-		let format = 'dev';
-		let origin = 'true';
-
-		if (config.env !== 'development' || 'test') {
-			format = 'combined';
-			origin = 'https://zigocouriers.com';
-		}
-
-		this.app.use(morgan(format, { stream: stream }));
+		this.app.use(morgan(config.morgan_format, { stream: stream }));
 
 		// enable cors
-		this.app.use(cors({ origin: origin, credentials: true }));
+		this.app.use(cors({ origin: config.cors_origin, credentials: true }));
 
 		// set security HTTP headers
 		this.app.use(helmet());

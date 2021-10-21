@@ -6,11 +6,11 @@ const router = express.Router();
 
 const defaultRoutes = [
 	{
-		path: '/v1/auth',
+		path: '/api/v1/auth',
 		route: v1Routes,
 	},
 	{
-		path: '/v1/users',
+		path: '/api/v1/users',
 		route: userRoutes,
 	},
 ];

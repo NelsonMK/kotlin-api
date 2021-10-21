@@ -1,6 +1,5 @@
 import httpStatus from 'http-status';
 import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
-import { ObjectID } from 'typeorm';
 import { AdminModel } from '../db/models/admin.model';
 import { UserModel } from '../db/models/users.model';
 import ApiError from '../utils/ApiError';
@@ -16,7 +15,7 @@ const jwtOptions = {
 const jwtVerify = async (
 	payload: {
 		type: string;
-		sub: string | number | Date | ObjectID | undefined;
+		sub: string | number | undefined;
 	},
 	done: (
 		arg0: unknown,

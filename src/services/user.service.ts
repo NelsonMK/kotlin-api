@@ -84,12 +84,9 @@ const getUserByPhone = async (phone: number) => {
  * @returns {Promise<UserModel[]>, number}
  */
 const getUsers = async () => {
-	const users = await UserModel.query()
-		//.allowGraph('tokens')
-		//.withGraphFetched('tokens')
-		.catch((error) => {
-			logger.error(error);
-		});
+	const users = await UserModel.query().catch((error) => {
+		logger.error(error);
+	});
 
 	return users;
 };

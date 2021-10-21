@@ -11,28 +11,7 @@ const enumerateErrorFormat = winston.format((info) => {
 	return info;
 });
 
-// const logger = winston.createLogger({
-// 	level: config.env === 'development' ? 'debug' : 'info',
-// 	format: winston.format.combine(
-// 		enumerateErrorFormat(),
-// 		config.env === 'development'
-// 			? winston.format.colorize()
-// 			: winston.format.uncolorize(),
-// 		//winston.format.timestamp({ format: 'MMM-DD-YYYY HH:mm:ss' }),
-// 		winston.format.splat(),
-// 		winston.format.printf(({ level, message }) => `${level}: ${message}`)
-// 	),
-// 	transports: [
-// 		new winston.transports.Console({
-// 			stderrLevels: ['error'],
-// 		}),
-// 		/*new winston.transports.File({
-// 			filename: '',
-// 		}),*/
-// 	],
-// });
-
-const logDir: string = path.join(__dirname, '../logs');
+const logDir: string = path.join(__dirname, '../../logs');
 
 if (!fs.existsSync(logDir)) {
 	fs.mkdirSync(logDir);

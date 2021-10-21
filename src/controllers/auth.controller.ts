@@ -37,7 +37,6 @@ const refreshAccessToken = catchAsync(async (req: Request, res: Response) => {
 });
 
 const forgotPassword = catchAsync(async (req: Request, res: Response) => {
-	console.log(req.body.email);
 	const resetPasswordToken = await generateResetPasswordToken(req.body.email);
 	res.status(httpStatus.CREATED).send(resetPasswordToken);
 });

@@ -65,17 +65,20 @@ const saveToken = async (
  */
 //*Add extra validations
 const verifyToken = async (token: string, type: string) => {
+	if (!token)
+		throw new ApiError(
+			httpStatus.UNAUTHORIZED,
+			'You are not authenticated'
+		);
+
 	const payload = jwt.verify(token, config.jwt.secret);
 
 	const savedToken = await TokenModel.query()
 		.findOne({ token, type, user_id: payload.sub, blacklisted: false })
-		//.allowGraph('user')
 		.withGraphFetched('user')
 		.catch((error) => {
 			logger.error(error);
 		});
-
-	console.log(savedToken);
 
 	if (!savedToken) {
 		throw new ApiError(httpStatus.UNAUTHORIZED, 'Invalid token');
