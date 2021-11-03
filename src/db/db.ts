@@ -1,11 +1,12 @@
 import knex from 'knex';
-import { development } from './knexfile';
+import { development, production } from './knexfile';
 import { Model } from 'objection';
 import logger from '../utils/logger';
 import config from '../config/config';
 import { createConnection } from 'typeorm';
 import { User } from '../entity/User';
 import { Tokens } from '../entity/Token';
+import { Admin } from '../entity/Admin';
 
 const connectDB = async () => {
 	try {
@@ -13,6 +14,8 @@ const connectDB = async () => {
 
 		if (config.env === 'development') {
 			db = knex(development);
+		} else if (config.env === 'production') {
+			db = knex(production);
 		}
 
 		Model.knex(db);
@@ -20,11 +23,13 @@ const connectDB = async () => {
 		await createConnection({
 			type: 'postgres',
 			url: config.pg,
-			entities: [User, Tokens],
+			entities: [User, Tokens, Admin],
 			synchronize: true,
 			logging: false,
 		})
-			.then(() => {})
+			.then(() => {
+				logger.info(`Successfully connected to db - typeorm`);
+			})
 			.catch((error) => {
 				logger.error(error);
 			});

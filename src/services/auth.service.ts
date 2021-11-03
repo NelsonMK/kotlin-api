@@ -1,6 +1,5 @@
 import httpStatus from 'http-status';
 import ApiError from '../utils/ApiError';
-import logger from '../utils/logger';
 import {
 	generateAccessToken,
 	generateAuthTokens,
@@ -9,6 +8,8 @@ import {
 import tokenTypes from '../config/tokens';
 import { TokenModel } from '../db/models/tokens.model';
 import { UserModel } from '../db/models/users.model';
+import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
+import { loginEmitter } from '../listeners/login.listener';
 
 /**
  * Login with email and password
@@ -16,12 +17,8 @@ import { UserModel } from '../db/models/users.model';
  * @param password
  * @returns {Promise<User>}
  */
-const login = async (email: string, password: string) => {
-	const user = await UserModel.query()
-		.findOne({ email: email })
-		.catch((error) => {
-			logger.error(error);
-		});
+const login = async (email: string, password: string): Promise<UserModel> => {
+	const user = await UserModel.query().findOne({ email: email });
 
 	if (!user) {
 		throw new ApiError(httpStatus.UNAUTHORIZED, 'Invalid email/password');
@@ -33,6 +30,8 @@ const login = async (email: string, password: string) => {
 		throw new ApiError(httpStatus.UNAUTHORIZED, 'Invalid email/password1');
 	}
 
+	loginEmitter.emit('loggedIn', user);
+
 	return user;
 };
 
@@ -41,18 +40,14 @@ const login = async (email: string, password: string) => {
  * @param refreshToken
  */
 const logout = async (refreshToken: string) => {
-	const token = await TokenModel.query()
-		.findOne({
-			token: refreshToken,
-			type: tokenTypes.REFRESH,
-			blacklisted: false,
-		})
-		.catch((error) => {
-			logger.error(error);
-		});
+	const token = await TokenModel.query().findOne({
+		token: refreshToken,
+		type: tokenTypes.REFRESH,
+		blacklisted: false,
+	});
 
 	if (!token) {
-		throw new ApiError(httpStatus.NOT_FOUND, 'Not found');
+		throw new ApiError(httpStatus.NOT_FOUND, 'Invalid token');
 	}
 	await token.$query().delete();
 };
@@ -63,24 +58,15 @@ const logout = async (refreshToken: string) => {
  * @returns {Promise<Object>}
  */
 const refreshAuth = async (refreshToken: string) => {
-	try {
-		const token = await verifyToken(refreshToken, tokenTypes.REFRESH);
+	const token = await verifyToken(refreshToken, tokenTypes.REFRESH);
 
-		//const user = await getUserByIdService(token.user_id);
-		if (!token.user) {
-			throw new ApiError(httpStatus.UNAUTHORIZED, 'Invalid token');
-		}
-		await token
-			.$query()
-			.delete()
-			.catch((error) => {
-				logger.error(error);
-			});
-		return await generateAuthTokens(token.user);
-	} catch (error) {
-		logger.error(error);
-		throw new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate');
+	if (!token.user) {
+		throw new ApiError(httpStatus.UNAUTHORIZED, 'Invalid token');
 	}
+
+	await token.$query().delete();
+
+	return await generateAuthTokens(token.user);
 };
 
 /**
@@ -89,18 +75,13 @@ const refreshAuth = async (refreshToken: string) => {
  * @returns {Promise<Object>}
  */
 const refreshAccessToken = async (refreshToken: string) => {
-	try {
-		const token = await verifyToken(refreshToken, tokenTypes.REFRESH);
+	const token = await verifyToken(refreshToken, tokenTypes.REFRESH);
 
-		if (!token.user) {
-			throw new ApiError(httpStatus.UNAUTHORIZED, 'Invalid token');
-		}
-
-		return await generateAccessToken(token.user);
-	} catch (error) {
-		logger.error(error);
-		throw new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate');
+	if (!token.user) {
+		throw new ApiError(httpStatus.UNAUTHORIZED, 'Invalid token');
 	}
+
+	return await generateAccessToken(token.user);
 };
 
 /**
@@ -119,27 +100,29 @@ const resetPassword = async (resetPasswordToken: string, password: string) => {
 		if (!user) {
 			throw new ApiError(
 				httpStatus.UNAUTHORIZED,
-				'This account doesn`t exist'
+				'This account does not exist'
 			);
 		}
 
-		await user
-			.$query()
-			.update({ password: password })
-			.catch((error) => {
-				logger.error(error);
-			});
+		await user.$query().update({ password: password });
 
 		const res = await TokenModel.query()
 			.findOne({ user_id: user.id, type: tokenTypes.RESET_PASSWORD })
-			.delete()
-			.catch((error) => {
-				logger.error(error);
-			});
+			.delete();
+
 		return res;
 	} catch (error) {
-		logger.error(error);
-		throw new ApiError(httpStatus.UNAUTHORIZED, 'Password reset failed');
+		console.log(error);
+		if (error instanceof TokenExpiredError) {
+			throw new ApiError(httpStatus.UNAUTHORIZED, 'Token expired'); //should come back to this
+		} else if (error instanceof JsonWebTokenError) {
+			throw new ApiError(httpStatus.UNAUTHORIZED, 'Invalid token');
+		} else {
+			throw new ApiError(
+				httpStatus.UNAUTHORIZED,
+				'Password reset failed'
+			);
+		}
 	}
 };
 

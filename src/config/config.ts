@@ -15,6 +15,8 @@ const envVarsSchema = Joi.object()
 		JWT_SECRET: Joi.string().required(),
 		CORS_ORIGIN: Joi.string().required(),
 		MORGAN_FORMAT: Joi.string().required(),
+		TREBLLE_API_KEY: Joi.string().required(),
+		TREBLLE_PROJECT_ID: Joi.string().required(),
 	})
 	.unknown();
 
@@ -35,4 +37,8 @@ export default {
 	},
 	cors_origin: envVars.CORS_ORIGIN,
 	morgan_format: envVars.MORGAN_FORMAT,
+	treblle: {
+		api_key: envVars.TREBLLE_API_KEY,
+		project_id: envVars.TREBLLE_PROJECT_ID,
+	},
 };

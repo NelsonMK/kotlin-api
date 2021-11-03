@@ -9,3 +9,5 @@ temp/
 .env.production
 .env.development
 .env.test
+newrelic_agent.log
+prod-ca-2021.crt

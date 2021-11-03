@@ -24,6 +24,12 @@ const refreshTokens = {
 	}),
 };
 
+const refreshAccessToken = {
+	body: Joi.object().keys({
+		refreshToken: Joi.string().required(),
+	}),
+};
+
 const forgotPassword = {
 	body: Joi.object().keys({
 		email: Joi.string().required().email(),
@@ -31,8 +37,14 @@ const forgotPassword = {
 };
 
 const resetPassword = {
+	headers: Joi.object()
+		.keys({
+			authorization: Joi.string()
+				.required()
+				.label('Authorization is required'),
+		})
+		.options({ allowUnknown: true }),
 	body: Joi.object().keys({
-		token: Joi.string().required(),
 		password: Joi.string().required().custom(password),
 	}),
 };
@@ -41,6 +53,7 @@ export {
 	register as authRegister,
 	login as authLogin,
 	refreshTokens as authRefreshTokens,
+	refreshAccessToken as authRefreshAccessToken,
 	forgotPassword as authForgotPassword,
 	resetPassword as authResetPassword,
 };

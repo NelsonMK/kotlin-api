@@ -6,7 +6,13 @@ import httpStatus from 'http-status';
 
 const validate =
 	(schema: object) => (req: Request, res: Response, next: NextFunction) => {
-		const validSchema = _.pick(schema, ['params', 'query', 'body']);
+		const validSchema = _.pick(schema, [
+			'params',
+			'query',
+			'body',
+			'headers',
+		]);
+
 		const object = _.pick(req, Object.keys(validSchema));
 
 		const { value, error } = Joi.compile(validSchema)

@@ -1,4 +1,4 @@
-import { Model } from 'objection';
+import { Model, raw } from 'objection';
 import * as bcrypt from 'bcryptjs';
 import { format } from 'timeago.js';
 import BaseModel from './base.model';
@@ -71,21 +71,23 @@ export class UserModel extends BaseModel {
 		this.updated_at = moment(new Date()).tz('Africa/Nairobi');
 	}
 
-	async isPhoneTaken(phoneNumber: string, excludeUserId: number) {
-		const user = await this.$query()
-			.findOne({ phone: phoneNumber })
-			.whereNot('id', excludeUserId);
+	async isPhoneTaken(
+		phoneNumber: string,
+		excludeUserId?: number
+	): Promise<Boolean> {
+		const user = await this.$query().where({ phone: phoneNumber });
 		return !!user;
 	}
 
-	async isEmailTaken(email: string, excludeUserId?: number) {
-		const user = await this.$query()
-			.findOne({ email: email })
-			.whereNot({ id: excludeUserId });
+	async isEmailTaken(
+		email: string,
+		excludeUserId?: number
+	): Promise<Boolean> {
+		const user = await this.$query().where({ email: email });
 		return !!user;
 	}
 
-	async isPasswordMatch(password: string) {
+	async isPasswordMatch(password: string): Promise<Boolean> {
 		const user = this;
 		return await bcrypt.compare(password, user.password);
 	}

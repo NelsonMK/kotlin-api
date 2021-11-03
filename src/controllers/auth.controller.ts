@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import httpStatus from 'http-status';
 import {
 	loginService,
@@ -16,14 +16,23 @@ import catchAsync from '../utils/CatchAsync';
 const register = catchAsync(async (req: Request, res: Response) => {
 	const user = await createUserService(req.body);
 
-	res.status(httpStatus.CREATED).send(user);
+	res.status(httpStatus.CREATED).send({
+		error: false,
+		message: 'Registration successful',
+		data: { user },
+	});
 });
 
 const login = catchAsync(async (req: Request, res: Response) => {
 	const { email, password } = req.body;
 	const user = await loginService(email, password);
 	const tokens = await generateAuthTokens(user);
-	res.json({ user, tokens });
+
+	res.json({
+		error: false,
+		message: 'Login successful',
+		data: { user, tokens },
+	});
 });
 
 const refreshTokens = catchAsync(async (req: Request, res: Response) => {
@@ -33,7 +42,7 @@ const refreshTokens = catchAsync(async (req: Request, res: Response) => {
 
 const refreshAccessToken = catchAsync(async (req: Request, res: Response) => {
 	const token = await refreshAccessTokenService(req.body.refreshToken);
-	res.send({ ...token });
+	res.send({ token });
 });
 
 const forgotPassword = catchAsync(async (req: Request, res: Response) => {
@@ -42,10 +51,10 @@ const forgotPassword = catchAsync(async (req: Request, res: Response) => {
 });
 
 const resetPassword = catchAsync(async (req: Request, res: Response) => {
-	const response = await resetPasswordService(
-		req.body.token,
-		req.body.password
-	);
+	const authHeader: string | any = req.headers['authorization'];
+	const token = authHeader.split(' ')[1];
+	const response = await resetPasswordService(token, req.body.password);
+
 	res.status(httpStatus.CREATED).send({ affected: response });
 });
 

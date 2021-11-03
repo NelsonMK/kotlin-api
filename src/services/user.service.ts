@@ -1,7 +1,7 @@
 import * as httpStatus from 'http-status';
 import ApiError from '../utils/ApiError';
-import logger from '../utils/logger';
 import { UserModel } from '../db/models/users.model';
+import { raw } from 'objection';
 
 /**
  * Create a new user
@@ -20,17 +20,13 @@ const createUser = async (data: any) => {
 		throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
 	}
 
-	const savedUser = await UserModel.query()
-		.insertAndFetch({
-			first_name: data.first_name,
-			last_name: data.last_name,
-			phone: data.phone,
-			email: data.email,
-			password: data.password,
-		})
-		.then((user) => {
-			return user;
-		});
+	const savedUser = await UserModel.query().insertAndFetch({
+		first_name: data.first_name,
+		last_name: data.last_name,
+		phone: data.phone,
+		email: data.email,
+		password: data.password,
+	});
 
 	return savedUser;
 };
@@ -41,14 +37,7 @@ const createUser = async (data: any) => {
  * @returns {Promise<User>}
  */
 const getUserById = async (userId: number) => {
-	return await UserModel.query()
-		.findById(userId)
-		.then((user) => {
-			return user;
-		})
-		.catch((error) => {
-			logger.error(error);
-		});
+	return await UserModel.query().findById(userId);
 };
 
 /**
@@ -57,12 +46,7 @@ const getUserById = async (userId: number) => {
  * @returns {Promise<UserModel>}
  */
 const getUserByEmail = async (email: string) => {
-	try {
-		const user = await UserModel.query().where({ email: email }).first();
-		return user;
-	} catch (error) {
-		logger.error(error);
-	}
+	return await UserModel.query().findOne({ email });
 };
 
 /**
@@ -71,12 +55,7 @@ const getUserByEmail = async (email: string) => {
  * @returns {Promise<UserModel>}
  */
 const getUserByPhone = async (phone: number) => {
-	try {
-		const user = await UserModel.query().where({ phone: phone }).first();
-		return user;
-	} catch (error) {
-		logger.error(error);
-	}
+	return await UserModel.query().findOne({ phone });
 };
 
 /**
@@ -84,11 +63,7 @@ const getUserByPhone = async (phone: number) => {
  * @returns {Promise<UserModel[]>, number}
  */
 const getUsers = async () => {
-	const users = await UserModel.query().catch((error) => {
-		logger.error(error);
-	});
-
-	return users;
+	return await UserModel.query();
 };
 
 /**
@@ -103,15 +78,35 @@ const updateUserById = async (userId: number, updateBody: any) => {
 		throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
 	}
 
-	const savedUser = await UserModel.query()
-		.where('email', updateBody.email)
-		.whereNot('id', userId);
+	const userPhone = await UserModel.query()
+		.where(raw('id != ?', userId))
+		.where('phone', updateBody.phone);
 
-	if (updateBody.email && savedUser) {
+	console.log(userPhone);
+
+	const isPhoneTaken = !!userPhone;
+
+	console.log(isPhoneTaken);
+
+	if (updateBody.phone && userPhone) {
+		throw new ApiError(
+			httpStatus.BAD_REQUEST,
+			'Phone number already taken'
+		);
+	}
+
+	if (
+		updateBody.email &&
+		(await !!UserModel.query()
+			.where(raw('id != ?', userId))
+			.where('email', updateBody.email))
+	) {
 		throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
 	}
 
 	Object.assign(user, updateBody);
+	user.$omit('password');
+	console.log(user);
 	await user.$query().update();
 	return user;
 };
@@ -119,20 +114,16 @@ const updateUserById = async (userId: number, updateBody: any) => {
 /**
  * Delete user by id
  * @param userId
- * @returns {Promise<User>}
+ * @returns {Promise<Number>}
  */
 const deleteUserById = async (userId: number) => {
 	const user = await getUserById(userId);
 	if (!user) {
 		throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
 	}
-	await user
-		.$query()
-		.delete()
-		.catch((error) => {
-			logger.error(error);
-		});
-	return user;
+
+	const affected = await user.$query().delete();
+	return affected;
 };
 
 export {

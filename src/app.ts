@@ -1,3 +1,5 @@
+import 'newrelic';
+import 'reflect-metadata';
 import express from 'express';
 import morgan from 'morgan';
 import cors from 'cors';
@@ -13,7 +15,7 @@ import ApiError from './utils/ApiError';
 import httpStatus from 'http-status';
 import passport from 'passport';
 import jwtStrategy from './config/passport';
-
+const { useTreblle } = require('treblle');
 class App {
 	public app: express.Application;
 	public port: string | number;
@@ -67,10 +69,15 @@ class App {
 		// jwt authentication
 		this.app.use(passport.initialize());
 		passport.use('jwt', jwtStrategy);
+
+		useTreblle(this.app, {
+			apiKey: config.treblle.api_key,
+			projectId: config.treblle.project_id,
+		});
 	}
 
 	private initializeRoutes() {
-		// v1 api routes
+		// api routes
 		this.app.use('/', router);
 	}
 

@@ -8,7 +8,6 @@ import ApiError from '../utils/ApiError';
 const verifyCallback =
 	(req: Request, resolve: any, reject: any, requiredRights: any) =>
 	(err: any, user: any, info: any) => {
-		console.log({ err, info });
 		if (err || info || !user) {
 			return reject(
 				new ApiError(httpStatus.UNAUTHORIZED, 'Unauthorized Access')

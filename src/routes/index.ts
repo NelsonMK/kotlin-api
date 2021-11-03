@@ -1,5 +1,5 @@
 import express from 'express';
-import { v1Routes } from './v1/auth.routes';
+import { authRoutes } from './v1/auth.routes';
 import { userRoutes } from './v1/user.routes';
 
 const router = express.Router();
@@ -7,7 +7,7 @@ const router = express.Router();
 const defaultRoutes = [
 	{
 		path: '/api/v1/auth',
-		route: v1Routes,
+		route: authRoutes,
 	},
 	{
 		path: '/api/v1/users',

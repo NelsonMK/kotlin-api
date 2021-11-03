@@ -6,7 +6,7 @@ import tokenTypes from '../config/tokens';
 import { TokenModel } from '../db/models/tokens.model';
 import { UserModel } from '../db/models/users.model';
 import ApiError from '../utils/ApiError';
-import logger from '../utils/logger';
+import { getUserByEmailService } from './user.service';
 
 /**
  * Generate token
@@ -47,7 +47,7 @@ const saveToken = async (
 	expires: any,
 	type: string,
 	blacklisted = false
-) => {
+): Promise<TokenModel> => {
 	return await TokenModel.query().insert({
 		token,
 		expires,
@@ -64,7 +64,10 @@ const saveToken = async (
  * @returns {Promise<Token>}
  */
 //*Add extra validations
-const verifyToken = async (token: string, type: string) => {
+const verifyToken = async (
+	token: string,
+	type: string
+): Promise<TokenModel> => {
 	if (!token)
 		throw new ApiError(
 			httpStatus.UNAUTHORIZED,
@@ -75,10 +78,7 @@ const verifyToken = async (token: string, type: string) => {
 
 	const savedToken = await TokenModel.query()
 		.findOne({ token, type, user_id: payload.sub, blacklisted: false })
-		.withGraphFetched('user')
-		.catch((error) => {
-			logger.error(error);
-		});
+		.withGraphFetched('user');
 
 	if (!savedToken) {
 		throw new ApiError(httpStatus.UNAUTHORIZED, 'Invalid token');
@@ -91,7 +91,7 @@ const verifyToken = async (token: string, type: string) => {
  * @param user
  * @returns {object}
  */
-const generateAuthTokens = async (user: UserModel) => {
+const generateAuthTokens = async (user: UserModel): Promise<Object> => {
 	const accessTokenExpires = moment().add(30, 'minutes').tz('Africa/Nairobi');
 	const accessToken = generateToken(
 		user.id,
@@ -129,7 +129,7 @@ const generateAuthTokens = async (user: UserModel) => {
  * @param user
  * @returns {Object}
  */
-const generateAccessToken = async (user: UserModel) => {
+const generateAccessToken = (user: UserModel): Object => {
 	const accessTokenExpires = moment().add(30, 'minutes').tz('Africa/Nairobi');
 	const accessToken = generateToken(
 		user.id,
@@ -150,12 +150,8 @@ const generateAccessToken = async (user: UserModel) => {
  * @param email
  * @returns {string}
  */
-const generateResetPasswordToken = async (email: string) => {
-	const user = await UserModel.query()
-		.findOne({ email: email })
-		.catch((error) => {
-			logger.error(error);
-		});
+const generateResetPasswordToken = async (email: string): Promise<String> => {
+	const user = await getUserByEmailService(email);
 
 	if (!user) {
 		throw new ApiError(
@@ -178,6 +174,7 @@ const generateResetPasswordToken = async (email: string) => {
 	);
 	return resetPasswordToken;
 };
+
 export {
 	verifyToken,
 	generateAuthTokens,

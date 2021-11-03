@@ -28,15 +28,7 @@ const jwtVerify = async (
 			throw new ApiError(httpStatus.UNAUTHORIZED, 'Invalid token type');
 		}
 
-		const user = await UserModel.query()
-			.findById(Number(payload.sub))
-			.then((user) => {
-				return user;
-			})
-			.catch((error) => {
-				logger.error(error);
-				done(error, false);
-			});
+		const user = await UserModel.query().findById(Number(payload.sub));
 
 		if (!user) {
 			return done(null, false);
